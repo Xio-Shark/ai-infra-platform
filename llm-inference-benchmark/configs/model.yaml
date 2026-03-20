@@ -1,0 +1,3 @@
+# Upstream OpenAI-compatible inference (e.g. vLLM). Leave empty to use built-in mock.
+upstream_base_url: "" # e.g. "http://127.0.0.1:8000/v1"
+model_id: "Qwen/Qwen2.5-1.5B-Instruct"

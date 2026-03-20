@@ -1,0 +1,9 @@
+base_url: "http://127.0.0.1:8080"
+endpoint: "/v1/chat/completions"
+model: "bench-model"
+concurrency: 4
+total_requests: 40
+prompt_chars: 256
+max_tokens: 64
+stream: true
+timeout_sec: 120
