@@ -1,8 +1,1 @@
-{
-  "job_type": "inference",
-  "payload": "echo inference-demo",
-  "model_version": "llama-3-8b",
-  "dataset_version": "",
-  "image_tag": "infer:latest",
-  "resource_spec": "{\"gpu\":1}"
-}
+{}

@@ -1,1 +1,0 @@
-{"text": "You are assisting with capacity planning. Describe how you would measure tail latency, throughput, and error budgets for an OpenAI-compatible inference service, and which dashboards you would add to Grafana. Keep the answer under 200 words but be specific about metrics names and SLO examples."}

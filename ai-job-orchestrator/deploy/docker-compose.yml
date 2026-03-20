@@ -1,6 +1,2 @@
-# 可选本地依赖；当前二进制默认使用 SQLite，无需 Redis/MySQL 即可跑通演示。
-services:
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
+# Compose skeleton — add services when implementing.
+services: {}

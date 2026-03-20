@@ -1,11 +1,3 @@
-# Infra 单仓
+# Infra 单仓（目录骨架）
 
-本目录包含三个可独立演进的项目（详见 `prompt.md`）：
-
-| 目录 | 说明 |
-|------|------|
-| `llm-inference-benchmark/` | OpenAI 兼容网关、压测客户端、Prometheus/Grafana |
-| `pytorch-profiling-lab/` | CIFAR-10 训练与 `torch.profiler` 实验骨架 |
-| `ai-job-orchestrator/` | Go 作业编排 API + scheduler + worker（SQLite） |
-
-各子项目自带 `README.md`。开发时进入对应子目录按文档操作即可。
+三个子项目仅保留 **`prompt.md` 约定的目录树与占位文件**，业务实现已移除。从各子目录 `README.md` 开始补全即可。

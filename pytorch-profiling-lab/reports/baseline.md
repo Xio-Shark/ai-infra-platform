@@ -1,3 +1,3 @@
-# Baseline 记录（待填）
+# Baseline（骨架）
 
-环境与 `train.train --output-json` 路径。
+待补充。

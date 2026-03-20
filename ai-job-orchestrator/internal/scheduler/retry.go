@@ -1,3 +1,4 @@
 package scheduler
 
-// Retry policy placeholder: bump attempts, requeue with backoff (future work).
+// Retry policy skeleton.
+type Retry struct{}

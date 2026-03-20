@@ -1,8 +1,1 @@
-{
-  "job_type": "training",
-  "payload": "echo training-demo",
-  "model_version": "qwen2.5-1.5b",
-  "dataset_version": "cifar10-v1",
-  "image_tag": "train:latest",
-  "resource_spec": "{\"gpu\":1,\"cpu\":\"4\",\"memory\":\"16Gi\"}"
-}
+{}

@@ -1,8 +1,1 @@
-{
-  "job_type": "benchmark",
-  "payload": "echo benchmark-demo",
-  "model_version": "bench-model",
-  "dataset_version": "",
-  "image_tag": "bench:latest",
-  "resource_spec": "{\"gpu\":1}"
-}
+{}
