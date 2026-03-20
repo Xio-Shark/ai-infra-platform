@@ -14,6 +14,7 @@ pytorch-profiling-lab/.venv/
 
 # Go
 ai-job-orchestrator/bin/
+ai-job-orchestrator/data/
 *.exe
 *.test
 
