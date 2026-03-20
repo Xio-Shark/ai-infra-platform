@@ -1,54 +1,5 @@
 openapi: 3.0.3
 info:
   title: AI Job Orchestrator
-  version: 0.1.0
-paths:
-  /api/v1/jobs:
-    post:
-      summary: Create job
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateJobRequest'
-      responses:
-        '201':
-          description: Created
-  /api/v1/jobs/{id}:
-    get:
-      summary: Get job
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-  /healthz:
-    get:
-      summary: Health
-      responses:
-        '200':
-          description: OK
-components:
-  schemas:
-    CreateJobRequest:
-      type: object
-      required: [job_type]
-      properties:
-        job_type:
-          type: string
-          enum: [training, inference, eval, benchmark]
-        payload:
-          type: string
-        model_version:
-          type: string
-        dataset_version:
-          type: string
-        image_tag:
-          type: string
-        resource_spec:
-          type: string
+  version: 0.0.0
+paths: {}

@@ -1,17 +1,1 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: ai-orchestrator-scheduler
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: ai-orchestrator-scheduler
-  template:
-    metadata:
-      labels:
-        app: ai-orchestrator-scheduler
-    spec:
-      containers:
-        - name: scheduler
-          image: ai-job-orchestrator-scheduler:latest
+# K8s manifest skeleton — scheduler

@@ -1,9 +1,1 @@
-epochs: 2
-batch_size: 128
-lr: 0.1
-num_workers: 2
-pin_memory: false
-amp: false
-compile_model: false
-data_dir: ./data
-model: resnet18
+# Training config — skeleton.

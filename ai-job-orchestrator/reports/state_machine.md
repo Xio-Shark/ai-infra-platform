@@ -1,5 +1,3 @@
-# 状态机
+# 状态机（骨架）
 
-`pending` → `scheduled` → `running` → `succeeded` | `failed`
-
-（`retrying` / `cancelled` 待实现。）
+待补充。
