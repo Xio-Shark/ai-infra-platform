@@ -1,0 +1,27 @@
+{
+  "name": "train-resnet-demo",
+  "job_type": "training",
+  "executor": "shell",
+  "priority": 20,
+  "model_version": "resnet18-v1",
+  "dataset_version": "cifar10-synthetic-v1",
+  "image_tag": "python:3.12-slim",
+  "resource_spec": {
+    "cpu": "2",
+    "memory": "2Gi",
+    "gpu": 0,
+    "gpu_memory": ""
+  },
+  "command": [
+    "/bin/sh",
+    "-lc",
+    "echo training-start && sleep 1 && echo training-done"
+  ],
+  "environment": {
+    "EPOCHS": "1"
+  },
+  "metadata": {
+    "owner": "demo"
+  },
+  "max_retries": 1
+}

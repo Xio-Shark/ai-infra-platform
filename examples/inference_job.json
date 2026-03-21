@@ -1,0 +1,27 @@
+{
+  "name": "inference-qwen-demo",
+  "job_type": "inference",
+  "executor": "shell",
+  "priority": 10,
+  "model_version": "qwen2.5-1.5b",
+  "dataset_version": "none",
+  "image_tag": "python:3.12-slim",
+  "resource_spec": {
+    "cpu": "1",
+    "memory": "1Gi",
+    "gpu": 0,
+    "gpu_memory": ""
+  },
+  "command": [
+    "/bin/sh",
+    "-lc",
+    "echo serving-inference && echo request-processed"
+  ],
+  "environment": {
+    "MODEL_NAME": "qwen2.5-1.5b"
+  },
+  "metadata": {
+    "endpoint": "local"
+  },
+  "max_retries": 0
+}

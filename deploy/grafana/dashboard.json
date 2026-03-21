@@ -1,0 +1,25 @@
+{
+  "title": "AI Job Orchestrator MVP",
+  "schemaVersion": 39,
+  "version": 1,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Submitted Jobs",
+      "targets": [
+        {
+          "expr": "ai_jobs_submitted_total"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Succeeded Jobs",
+      "targets": [
+        {
+          "expr": "ai_jobs_succeeded_total"
+        }
+      ]
+    }
+  ]
+}

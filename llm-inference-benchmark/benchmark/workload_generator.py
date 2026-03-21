@@ -1,1 +1,0 @@
-# Workload generator — skeleton.

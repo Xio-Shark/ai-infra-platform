@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-job-api-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-job-api-server
+  template:
+    metadata:
+      labels:
+        app: ai-job-api-server
+    spec:
+      containers:
+        - name: api-server
+          image: ai-job-orchestrator:latest
+          ports:
+            - containerPort: 8080
