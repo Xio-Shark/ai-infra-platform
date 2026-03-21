@@ -1,37 +1,7 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-.venv/
-venv/
-llm-inference-benchmark/.venv/
-pytorch-profiling-lab/.venv/
-*.egg-info/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-*.log
-
-# Go
-ai-job-orchestrator/bin/
-ai-job-orchestrator/data/
-*.exe
-*.test
-
-# Local DB / secrets
-.env
+bin/
+data/
 *.db
-*.db-shm
-*.db-wal
-
-# PyTorch outputs (keep dirs)
-pytorch-profiling-lab/outputs/logs/*
-pytorch-profiling-lab/outputs/traces/*
-pytorch-profiling-lab/outputs/tables/*
-pytorch-profiling-lab/outputs/figures/*
-!pytorch-profiling-lab/outputs/*/.gitkeep
-
-# IDE / OS
-.idea/
-.vscode/
+*.db-*
+.tmp/
 .DS_Store
+reports/generated/

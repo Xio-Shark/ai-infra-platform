@@ -1,0 +1,404 @@
+openapi: 3.0.3
+info:
+  title: AI Job Orchestrator
+  version: 0.1.0
+  description: API contract for the in-memory MVP orchestrator.
+servers:
+  - url: http://127.0.0.1:8080
+paths:
+  /healthz:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+  /metrics:
+    get:
+      summary: Render Prometheus metrics
+      responses:
+        "200":
+          description: Prometheus text exposition
+          content:
+            text/plain:
+              schema:
+                type: string
+  /jobs:
+    get:
+      summary: List jobs
+      responses:
+        "200":
+          description: Jobs sorted by priority and creation time
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Job"
+    post:
+      summary: Create job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateJobInput"
+      responses:
+        "201":
+          description: Job created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /jobs/{id}:
+    get:
+      summary: Get job
+      parameters:
+        - $ref: "#/components/parameters/JobID"
+      responses:
+        "200":
+          description: Job detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+        "404":
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /jobs/{id}/schedule:
+    post:
+      summary: Schedule a pending or retrying job
+      parameters:
+        - $ref: "#/components/parameters/JobID"
+      responses:
+        "200":
+          description: Scheduled job
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+        "400":
+          description: Invalid state transition
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /jobs/{id}/run:
+    post:
+      summary: Schedule if needed and run the job immediately
+      parameters:
+        - $ref: "#/components/parameters/JobID"
+      responses:
+        "200":
+          description: Execution record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Execution"
+        "400":
+          description: Invalid state transition or executor failure
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /jobs/{id}/retry:
+    post:
+      summary: Move a failed or retrying job back to pending
+      parameters:
+        - $ref: "#/components/parameters/JobID"
+      responses:
+        "200":
+          description: Retried job
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+        "400":
+          description: Invalid state transition
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /jobs/{id}/cancel:
+    post:
+      summary: Cancel a pending, scheduled, or retrying job
+      parameters:
+        - $ref: "#/components/parameters/JobID"
+      responses:
+        "200":
+          description: Cancelled job
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+        "400":
+          description: Invalid state transition
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /jobs/{id}/executions:
+    get:
+      summary: List execution attempts for a job
+      parameters:
+        - $ref: "#/components/parameters/JobID"
+      responses:
+        "200":
+          description: Execution list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Execution"
+        "400":
+          description: Execution lookup error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /jobs/{id}/trace:
+    get:
+      summary: Get trace timeline for a job
+      parameters:
+        - $ref: "#/components/parameters/JobID"
+      responses:
+        "200":
+          description: Span timeline
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SpanRecord"
+        "404":
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /dispatch/once:
+    post:
+      summary: Schedule and execute up to N pending jobs
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+      responses:
+        "200":
+          description: Executions created by this dispatch pass
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Execution"
+        "400":
+          description: Invalid limit or execution error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  parameters:
+    JobID:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+  schemas:
+    HealthResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          example: ok
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+    ResourceSpec:
+      type: object
+      properties:
+        cpu:
+          type: string
+        memory:
+          type: string
+        gpu:
+          type: integer
+        gpu_memory:
+          type: string
+    CreateJobInput:
+      type: object
+      required: [name, job_type, executor, command]
+      properties:
+        name:
+          type: string
+        job_type:
+          type: string
+          enum: [training, inference, benchmark]
+        executor:
+          type: string
+          enum: [shell, k8s-dry-run, k8s-apply, http]
+        priority:
+          type: integer
+        model_version:
+          type: string
+        dataset_version:
+          type: string
+        image_tag:
+          type: string
+        resource_spec:
+          $ref: "#/components/schemas/ResourceSpec"
+        command:
+          type: array
+          items:
+            type: string
+        environment:
+          type: object
+          additionalProperties:
+            type: string
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+        max_retries:
+          type: integer
+    Job:
+      type: object
+      required:
+        - id
+        - name
+        - job_type
+        - status
+        - executor
+        - priority
+        - resource_spec
+        - command
+        - environment
+        - metadata
+        - max_retries
+        - retry_count
+        - trace_id
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        job_type:
+          type: string
+          enum: [training, inference, benchmark]
+        status:
+          type: string
+          enum: [pending, scheduled, running, succeeded, failed, retrying, cancelled]
+        executor:
+          type: string
+        priority:
+          type: integer
+        model_version:
+          type: string
+        dataset_version:
+          type: string
+        image_tag:
+          type: string
+        resource_spec:
+          $ref: "#/components/schemas/ResourceSpec"
+        command:
+          type: array
+          items:
+            type: string
+        environment:
+          type: object
+          additionalProperties:
+            type: string
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+        max_retries:
+          type: integer
+        retry_count:
+          type: integer
+        last_error:
+          type: string
+        trace_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Execution:
+      type: object
+      required:
+        - id
+        - job_id
+        - attempt
+        - status
+        - executor
+        - trace_id
+        - exit_code
+        - started_at
+      properties:
+        id:
+          type: string
+        job_id:
+          type: string
+        attempt:
+          type: integer
+        status:
+          type: string
+          enum: [running, succeeded, failed]
+        executor:
+          type: string
+        trace_id:
+          type: string
+        logs:
+          type: string
+        manifest:
+          type: string
+        exit_code:
+          type: integer
+        error:
+          type: string
+        started_at:
+          type: string
+          format: date-time
+        finished_at:
+          type: string
+          format: date-time
+    SpanRecord:
+      type: object
+      required: [name, timestamp, fields]
+      properties:
+        name:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        fields:
+          type: object
+          additionalProperties:
+            type: string

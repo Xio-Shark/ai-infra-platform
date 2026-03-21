@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-job-scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-job-scheduler
+  template:
+    metadata:
+      labels:
+        app: ai-job-scheduler
+    spec:
+      containers:
+        - name: scheduler
+          image: ai-job-orchestrator:latest
+          command: ["./bin/scheduler", "examples/benchmark_job.json"]

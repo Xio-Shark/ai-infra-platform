@@ -1,0 +1,22 @@
+{
+  "name": "vllm-qwen-benchmark",
+  "job_type": "benchmark",
+  "executor": "benchmark",
+  "priority": 5,
+  "model_version": "qwen2.5:1.5b",
+  "resource_spec": {
+    "cpu": "4",
+    "memory": "8Gi"
+  },
+  "command": ["echo", "benchmark-via-executor"],
+  "metadata": {
+    "bench_target": "http://localhost:11434",
+    "bench_endpoint": "/v1/chat/completions",
+    "bench_model": "qwen2.5:1.5b",
+    "bench_concurrency": "5",
+    "bench_total_reqs": "20",
+    "bench_max_tokens": "64",
+    "bench_prompts": "Hello, tell me a joke;What is AI?;Explain Go concurrency"
+  },
+  "max_retries": 1
+}
