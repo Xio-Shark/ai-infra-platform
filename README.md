@@ -1,6 +1,6 @@
 # AI Infra Platform
 
-[![CI](https://github.com/xioshark/infra/actions/workflows/ci.yml/badge.svg)](https://github.com/xioshark/infra/actions/workflows/ci.yml)
+[![CI](https://github.com/Xio-Shark/ai-infra-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/Xio-Shark/ai-infra-platform/actions/workflows/ci.yml)
 ![Go](https://img.shields.io/badge/Go-1.22-00ADD8?logo=go)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
