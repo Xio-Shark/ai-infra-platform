@@ -6,6 +6,8 @@
 
 面向 AI 训练、推理和压测任务的作业编排平台，内置 Go 并发压测客户端。
 
+**GPU 实测亮点**：RTX 4050 Laptop GPU vs Apple Silicon CPU，同模型（Qwen2.5-1.5B）下 **QPS +119%、P50 延迟 -56%、tokens/s +65%**。详见 [benchmark_comparison.md](reports/benchmark_comparison.md)。
+
 ## 核心能力
 
 - **任务编排**：提交、调度、执行、重试、取消，支持 training / inference / benchmark 三种 Job 类型
@@ -116,7 +118,7 @@ make build-benchctl
 
 - **语言**：Go 1.22
 - **Web**：`net/http` 标准库
-- **存储**：Memory（默认）/ MySQL（`STORE_BACKEND=mysql`）
+- **存储**：Memory（默认）/ MySQL（`STORE_BACKEND=mysql`）/ Redis（roadmap 占位，未实现）
 - **执行**：`os/exec`（Shell）/ K8s manifest 构建 / `net/http`（HTTP）/ 内置 benchmark 引擎
 - **观测**：自实现 Prometheus exporter + 内存 trace 时间线
 - **依赖**：仅 `go-sql-driver/mysql`（标准库之外唯一依赖）
@@ -144,3 +146,15 @@ benchmark executor 从 Job 的 `metadata` 字段读取压测配置（target、co
 | TTFT | Time To First Token（从 `x-ttft-ms` header） |
 | tokens/s | 输出 token 数 / 有效时间 |
 | success_rate | 成功比例 |
+
+## 文档导航
+
+- [系统设计](docs/system_design.md)
+- [Benchmark 设计](docs/benchmark_design.md)
+- [API 参考](docs/api_reference.md)
+- [GPU vs CPU 对比报告](reports/benchmark_comparison.md)
+- [简历条目对照表](docs/简历条目对照表.md)
+- [API 请求与响应样例](docs/API请求与响应样例.md)
+- [异常场景样例](docs/异常场景样例.md)
+- [工程证据索引](docs/工程证据索引.md)
+- [排障](docs/troubleshooting.md)
