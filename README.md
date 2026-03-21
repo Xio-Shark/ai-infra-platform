@@ -1,5 +1,9 @@
 # AI Infra Platform
 
+[![CI](https://github.com/xioshark/infra/actions/workflows/ci.yml/badge.svg)](https://github.com/xioshark/infra/actions/workflows/ci.yml)
+![Go](https://img.shields.io/badge/Go-1.22-00ADD8?logo=go)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 面向 AI 训练、推理和压测任务的作业编排平台，内置 Go 并发压测客户端。
 
 ## 核心能力

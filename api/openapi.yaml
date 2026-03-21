@@ -1,252 +1,194 @@
 openapi: 3.0.3
 info:
-  title: AI Job Orchestrator
-  version: 0.1.0
-  description: API contract for the in-memory MVP orchestrator.
+  title: AI Infra Platform API
+  description: 面向 AI 训练、推理和压测任务的作业编排平台
+  version: 1.0.0
+  license:
+    name: MIT
+
 servers:
-  - url: http://127.0.0.1:8080
+  - url: http://localhost:8080
+    description: Local development
+
 paths:
   /healthz:
     get:
-      summary: Health check
+      summary: 健康检查
       responses:
-        "200":
-          description: API is healthy
+        '200':
+          description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HealthResponse"
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
   /metrics:
     get:
-      summary: Render Prometheus metrics
+      summary: Prometheus 指标
       responses:
-        "200":
-          description: Prometheus text exposition
+        '200':
+          description: Prometheus text format
           content:
             text/plain:
               schema:
                 type: string
+
   /jobs:
-    get:
-      summary: List jobs
-      responses:
-        "200":
-          description: Jobs sorted by priority and creation time
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Job"
     post:
-      summary: Create job
+      summary: 创建任务
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateJobInput"
+              $ref: '#/components/schemas/CreateJobInput'
       responses:
-        "201":
+        '201':
           description: Job created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Job"
-        "400":
-          description: Invalid request
+                $ref: '#/components/schemas/Job'
+        '400':
+          description: Validation error
+    get:
+      summary: 列出所有任务
+      responses:
+        '200':
+          description: Job list (sorted by priority)
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                type: array
+                items:
+                  $ref: '#/components/schemas/Job'
+
   /jobs/{id}:
     get:
-      summary: Get job
+      summary: 查询任务详情
       parameters:
-        - $ref: "#/components/parameters/JobID"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        "200":
+        '200':
           description: Job detail
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Job"
-        "404":
-          description: Job not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: '#/components/schemas/Job'
+        '404':
+          description: Not found
+
   /jobs/{id}/schedule:
     post:
-      summary: Schedule a pending or retrying job
+      summary: 调度任务 (pending → scheduled)
       parameters:
-        - $ref: "#/components/parameters/JobID"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        "200":
-          description: Scheduled job
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Job"
-        "400":
-          description: Invalid state transition
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+        '200':
+          description: Job scheduled
+
   /jobs/{id}/run:
     post:
-      summary: Schedule if needed and run the job immediately
+      summary: 调度并执行任务
       parameters:
-        - $ref: "#/components/parameters/JobID"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        "200":
-          description: Execution record
+        '200':
+          description: Execution result
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Execution"
-        "400":
-          description: Invalid state transition or executor failure
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: '#/components/schemas/Execution'
+
   /jobs/{id}/retry:
     post:
-      summary: Move a failed or retrying job back to pending
+      summary: 重试失败任务
       parameters:
-        - $ref: "#/components/parameters/JobID"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        "200":
-          description: Retried job
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Job"
-        "400":
-          description: Invalid state transition
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+        '200':
+          description: Job re-queued
+
   /jobs/{id}/cancel:
     post:
-      summary: Cancel a pending, scheduled, or retrying job
+      summary: 取消任务
       parameters:
-        - $ref: "#/components/parameters/JobID"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        "200":
-          description: Cancelled job
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Job"
-        "400":
-          description: Invalid state transition
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+        '200':
+          description: Job cancelled
+
   /jobs/{id}/executions:
     get:
-      summary: List execution attempts for a job
+      summary: 查询执行记录
       parameters:
-        - $ref: "#/components/parameters/JobID"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        "200":
+        '200':
           description: Execution list
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Execution"
-        "400":
-          description: Execution lookup error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                  $ref: '#/components/schemas/Execution'
+
   /jobs/{id}/trace:
     get:
-      summary: Get trace timeline for a job
+      summary: 查询 trace 时间线
       parameters:
-        - $ref: "#/components/parameters/JobID"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        "200":
-          description: Span timeline
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/SpanRecord"
-        "404":
-          description: Job not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+        '200':
+          description: Trace spans
+
   /dispatch/once:
     post:
-      summary: Schedule and execute up to N pending jobs
+      summary: 批量调度 pending 任务
       parameters:
-        - in: query
-          name: limit
+        - name: limit
+          in: query
           schema:
             type: integer
-            minimum: 1
-            default: 1
+            default: 10
       responses:
-        "200":
-          description: Executions created by this dispatch pass
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Execution"
-        "400":
-          description: Invalid limit or execution error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+        '200':
+          description: Dispatched executions
+
 components:
-  parameters:
-    JobID:
-      in: path
-      name: id
-      required: true
-      schema:
-        type: string
   schemas:
-    HealthResponse:
-      type: object
-      required: [status]
-      properties:
-        status:
-          type: string
-          example: ok
-    ErrorResponse:
-      type: object
-      required: [error]
-      properties:
-        error:
-          type: string
-    ResourceSpec:
-      type: object
-      properties:
-        cpu:
-          type: string
-        memory:
-          type: string
-        gpu:
-          type: integer
-        gpu_memory:
-          type: string
     CreateJobInput:
       type: object
       required: [name, job_type, executor, command]
@@ -258,9 +200,10 @@ components:
           enum: [training, inference, benchmark]
         executor:
           type: string
-          enum: [shell, k8s-dry-run, k8s-apply, http]
+          enum: [shell, k8s-dry-run, k8s-apply, http, benchmark]
         priority:
           type: integer
+          default: 0
         model_version:
           type: string
         dataset_version:
@@ -268,7 +211,7 @@ components:
         image_tag:
           type: string
         resource_spec:
-          $ref: "#/components/schemas/ResourceSpec"
+          $ref: '#/components/schemas/ResourceSpec'
         command:
           type: array
           items:
@@ -283,24 +226,10 @@ components:
             type: string
         max_retries:
           type: integer
+          default: 0
+
     Job:
       type: object
-      required:
-        - id
-        - name
-        - job_type
-        - status
-        - executor
-        - priority
-        - resource_spec
-        - command
-        - environment
-        - metadata
-        - max_retries
-        - retry_count
-        - trace_id
-        - created_at
-        - updated_at
       properties:
         id:
           type: string
@@ -308,7 +237,6 @@ components:
           type: string
         job_type:
           type: string
-          enum: [training, inference, benchmark]
         status:
           type: string
           enum: [pending, scheduled, running, succeeded, failed, retrying, cancelled]
@@ -318,30 +246,12 @@ components:
           type: integer
         model_version:
           type: string
-        dataset_version:
-          type: string
-        image_tag:
-          type: string
         resource_spec:
-          $ref: "#/components/schemas/ResourceSpec"
-        command:
-          type: array
-          items:
-            type: string
-        environment:
-          type: object
-          additionalProperties:
-            type: string
-        metadata:
-          type: object
-          additionalProperties:
-            type: string
+          $ref: '#/components/schemas/ResourceSpec'
         max_retries:
           type: integer
         retry_count:
           type: integer
-        last_error:
-          type: string
         trace_id:
           type: string
         created_at:
@@ -350,17 +260,9 @@ components:
         updated_at:
           type: string
           format: date-time
+
     Execution:
       type: object
-      required:
-        - id
-        - job_id
-        - attempt
-        - status
-        - executor
-        - trace_id
-        - exit_code
-        - started_at
       properties:
         id:
           type: string
@@ -373,32 +275,25 @@ components:
           enum: [running, succeeded, failed]
         executor:
           type: string
-        trace_id:
-          type: string
         logs:
-          type: string
-        manifest:
           type: string
         exit_code:
           type: integer
-        error:
-          type: string
         started_at:
           type: string
           format: date-time
         finished_at:
           type: string
           format: date-time
-    SpanRecord:
+
+    ResourceSpec:
       type: object
-      required: [name, timestamp, fields]
       properties:
-        name:
+        cpu:
           type: string
-        timestamp:
+        memory:
           type: string
-          format: date-time
-        fields:
-          type: object
-          additionalProperties:
-            type: string
+        gpu:
+          type: integer
+        gpu_memory:
+          type: string
