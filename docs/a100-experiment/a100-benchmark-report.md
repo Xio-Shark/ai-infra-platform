@@ -155,3 +155,37 @@
 
 > 2,576 条样本，3 epochs，1,412s 完成，Loss 1.49 → 0.50
 
+### Distilled 模型 Benchmark 结果
+
+#### QPS=2（低并发）
+
+![Distilled QPS=2 Benchmark Result](evidence/distilled-qps2-result.png)
+
+> 输出吞吐 389.27 tok/s，Mean TPOT **10.59ms**，P99 TPOT **12.65ms**
+
+#### QPS=8（中等并发）
+
+![Distilled QPS=8 Benchmark Result](evidence/distilled-qps8-result.png)
+
+> 输出吞吐 1,394.98 tok/s，Mean TPOT **11.61ms**，P99 ITL **29.78ms**
+
+#### QPS=inf（极限吞吐）
+
+![Distilled QPS=inf Benchmark Result](evidence/distilled-qps-inf-result.png)
+
+> 输出吞吐 **4,520.29 tok/s**，峰值 **9,707 tok/s**，21.35 req/s
+
+### vLLM 服务器运行日志
+
+#### Distilled 模型服务日志（Throughput 监控）
+
+![vLLM Distilled Server Log](evidence/vllm-distilled-server-log.png)
+
+> Avg generation throughput: 5,290.8 tokens/s，GPU KV cache usage: 4.4%，Prefix cache hit rate: 52.8%
+
+#### Base 模型服务日志（API 请求流）
+
+![vLLM Base Server Log](evidence/vllm-base-server-log.png)
+
+> 全部 POST /v1/chat/completions 返回 200 OK，连续高并发无失败请求
+
