@@ -10,6 +10,8 @@
 
 ## 核心能力
 
+- **GPU 资源感知调度**：Worker 节点上报 GPU 拓扑（型号/显存/利用率），Task 声明 ResourceRequest（GPU 数量 + 显存下限），调度器实现 **Best-Fit / First-Fit** 策略匹配 + 原子 GPU 预扣/释放，支持 CPU/GPU 混合负载的优先级调度
+- **异构节点管理**：Node 注册/心跳/上下线、GPU 资源预扣与释放、ResourceProvider 接口（Mock/NVML 可插拔）
 - **任务编排**：提交、调度、执行、重试、取消，支持 training / inference / benchmark 三种 Job 类型
 - **多类型执行器**：Shell、K8s dry-run、K8s apply、HTTP、Benchmark（Go 并发压测）
 - **内置压测客户端**：goroutine 并发池，对接 OpenAI-compatible 推理服务，采集 QPS / P50 / P95 / P99 / TTFT / tokens/s
@@ -98,10 +100,10 @@ make build-benchctl
 │   ├── worker/main.go          # Worker 演示
 │   └── benchctl/main.go        # Go 压测 CLI
 ├── internal/
-│   ├── model/                  # 领域模型 (Job, Execution, BenchmarkResult)
-│   ├── store/                  # Repository 接口 + Memory/MySQL 实现
+│   ├── model/                  # 领域模型 (Job, Execution, Node, ResourceSpec)
+│   ├── store/                  # Repository 接口 + Memory/MySQL 实现（含节点管理）
 │   ├── service/                # JobService + ExecutionService
-│   ├── scheduler/              # Dispatcher + PriorityQueue + Retry
+│   ├── scheduler/              # GPU 资源感知 Dispatcher + Best-Fit Matcher + PriorityQueue
 │   ├── worker/                 # Shell / K8s / HTTP / Benchmark 执行器
 │   ├── benchmark/              # Go 并发压测核心 (client, metrics, reporter)
 │   ├── api/                    # HTTP Router
@@ -124,6 +126,24 @@ make build-benchctl
 - **依赖**：仅 `go-sql-driver/mysql`（标准库之外唯一依赖）
 
 ## 关键设计
+
+### GPU 资源感知调度
+
+```text
+调度流程：
+1. 取待调度 Job，按优先级排序（PriorityQueue/Heap）
+2. 若 Job.ResourceSpec.GPU > 0：
+   - 查询所有在线 Node（ListOnlineNodes）
+   - Best-Fit 匹配：选残余 GPU 最少的满足节点 → 减少碎片
+   - 原子预扣 GPU 资源（AllocateGPU）
+   - 标记 Job.Metadata["assigned_node"] = nodeID
+3. 若 GPU=0（CPU-only）：直接调度，向后兼容
+4. 任务完成/失败后调用 ReleaseJobResources 归还 GPU
+
+ResourceProvider 接口（依赖注入）：
+  - MockProvider：本地/测试环境，可配置任意 GPU 拓扑
+  - NVMLProvider：生产环境，通过 nvidia-smi/go-nvml 采集真实数据
+```
 
 ### 状态机
 
