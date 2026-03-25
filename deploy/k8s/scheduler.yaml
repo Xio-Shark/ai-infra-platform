@@ -2,7 +2,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ai-job-scheduler
+  labels:
+    app: ai-job-scheduler
+    component: scheduler
 spec:
+  # Scheduler is a singleton — leader election prevents split-brain
   replicas: 1
   selector:
     matchLabels:
@@ -11,8 +15,26 @@ spec:
     metadata:
       labels:
         app: ai-job-scheduler
+        component: scheduler
     spec:
       containers:
         - name: scheduler
           image: ai-job-orchestrator:latest
-          command: ["./bin/scheduler", "examples/benchmark_job.json"]
+          command: ["./bin/scheduler"]
+          env:
+            - name: STORE_BACKEND
+              value: "mysql"
+            - name: MYSQL_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-credentials
+                  key: dsn
+            - name: SCHEDULE_INTERVAL
+              value: "5s"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
