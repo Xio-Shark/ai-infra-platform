@@ -229,4 +229,30 @@ const getJobSQL = `SELECT id, name, job_type, status, executor, priority, model_
 const listJobsSQL = `SELECT id, name, job_type, status, executor, priority, model_version, dataset_version, image_tag, resource_spec, command_json, environment_json, metadata_json, max_retries, retry_count, last_error, trace_id, created_at, updated_at FROM jobs ORDER BY priority DESC, created_at ASC`
 const createExecutionSQL = `INSERT INTO executions (id, job_id, attempt, status, executor, trace_id, logs, manifest, exit_code, error, started_at, finished_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 const updateExecutionSQL = `UPDATE executions SET job_id=?, attempt=?, status=?, executor=?, trace_id=?, logs=?, manifest=?, exit_code=?, error=?, started_at=?, finished_at=? WHERE id=?`
+// ---- Node management (stub — production would use a real table) ----
+
+func (s *Store) RegisterNode(_ context.Context, _ model.Node) error {
+	return store.ErrNotImplemented
+}
+
+func (s *Store) UpdateNode(_ context.Context, _ model.Node) error {
+	return store.ErrNotImplemented
+}
+
+func (s *Store) GetNode(_ context.Context, _ string) (model.Node, error) {
+	return model.Node{}, store.ErrNotImplemented
+}
+
+func (s *Store) ListOnlineNodes(_ context.Context) ([]model.Node, error) {
+	return nil, store.ErrNotImplemented
+}
+
+func (s *Store) AllocateGPU(_ context.Context, _ string, _ int) error {
+	return store.ErrNotImplemented
+}
+
+func (s *Store) ReleaseGPU(_ context.Context, _ string, _ int) error {
+	return store.ErrNotImplemented
+}
+
 const listExecutionsSQL = `SELECT id, job_id, attempt, status, executor, trace_id, logs, manifest, exit_code, error, started_at, finished_at FROM executions WHERE job_id = ? ORDER BY attempt ASC`

@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sort"
 	"sync"
 
@@ -20,6 +21,14 @@ type Repository interface {
 	CreateExecution(ctx context.Context, execution model.Execution) error
 	UpdateExecution(ctx context.Context, execution model.Execution) error
 	ListExecutions(ctx context.Context, jobID string) ([]model.Execution, error)
+
+	// Node management
+	RegisterNode(ctx context.Context, node model.Node) error
+	UpdateNode(ctx context.Context, node model.Node) error
+	GetNode(ctx context.Context, id string) (model.Node, error)
+	ListOnlineNodes(ctx context.Context) ([]model.Node, error)
+	AllocateGPU(ctx context.Context, nodeID string, count int) error
+	ReleaseGPU(ctx context.Context, nodeID string, count int) error
 }
 
 type MemoryStore struct {
@@ -27,6 +36,7 @@ type MemoryStore struct {
 	jobs       map[string]model.Job
 	executions map[string]model.Execution
 	jobIndex   map[string][]string
+	nodes      map[string]model.Node
 }
 
 func NewMemoryStore() *MemoryStore {
@@ -34,6 +44,7 @@ func NewMemoryStore() *MemoryStore {
 		jobs:       make(map[string]model.Job),
 		executions: make(map[string]model.Execution),
 		jobIndex:   make(map[string][]string),
+		nodes:      make(map[string]model.Node),
 	}
 }
 
@@ -110,4 +121,75 @@ func (s *MemoryStore) ListExecutions(_ context.Context, jobID string) ([]model.E
 		return items[i].Attempt < items[j].Attempt
 	})
 	return items, nil
+}
+
+// ---- Node management ----
+
+func (s *MemoryStore) RegisterNode(_ context.Context, node model.Node) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.nodes[node.ID] = node
+	return nil
+}
+
+func (s *MemoryStore) UpdateNode(_ context.Context, node model.Node) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if _, ok := s.nodes[node.ID]; !ok {
+		return ErrNotFound
+	}
+	s.nodes[node.ID] = node
+	return nil
+}
+
+func (s *MemoryStore) GetNode(_ context.Context, id string) (model.Node, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	node, ok := s.nodes[id]
+	if !ok {
+		return model.Node{}, ErrNotFound
+	}
+	return node, nil
+}
+
+func (s *MemoryStore) ListOnlineNodes(_ context.Context) ([]model.Node, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	nodes := make([]model.Node, 0)
+	for _, n := range s.nodes {
+		if n.IsSchedulable() {
+			nodes = append(nodes, n)
+		}
+	}
+	return nodes, nil
+}
+
+func (s *MemoryStore) AllocateGPU(_ context.Context, nodeID string, count int) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	node, ok := s.nodes[nodeID]
+	if !ok {
+		return ErrNotFound
+	}
+	if node.Resource.AvailGPU < count {
+		return fmt.Errorf("insufficient GPU: avail=%d, requested=%d", node.Resource.AvailGPU, count)
+	}
+	node.Resource.AvailGPU -= count
+	s.nodes[nodeID] = node
+	return nil
+}
+
+func (s *MemoryStore) ReleaseGPU(_ context.Context, nodeID string, count int) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	node, ok := s.nodes[nodeID]
+	if !ok {
+		return ErrNotFound
+	}
+	node.Resource.AvailGPU += count
+	if node.Resource.AvailGPU > node.Resource.TotalGPU {
+		node.Resource.AvailGPU = node.Resource.TotalGPU
+	}
+	s.nodes[nodeID] = node
+	return nil
 }
