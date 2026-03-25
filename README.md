@@ -17,6 +17,7 @@
 - **内置压测客户端**：goroutine 并发池，对接 OpenAI-compatible 推理服务，采集 QPS / P50 / P95 / P99 / TTFT / tokens/s
 - **Benchmark as Job**：压测可通过 API 提交为 benchmark 类型 Job，调度执行后结果关联到执行记录
 - **可观测性**：Prometheus 指标（submit/schedule/run/success/fail/retry/cancel + runtime histogram）、trace 时间线
+- **AI 推理网关**：OpenAI-compatible 反向代理，解析请求 model 字段 → per-model 令牌桶限流 → 加权随机选健康后端 → SSE 流转发 → 5xx 故障自动转移 + 后端健康探针自动摘除/恢复
 - **可插拔存储**：内存 store（默认） / MySQL（可选）
 
 ## 系统架构
@@ -105,6 +106,7 @@ make build-benchctl
 │   ├── service/                # JobService + ExecutionService
 │   ├── scheduler/              # GPU 资源感知 Dispatcher + Best-Fit Matcher + PriorityQueue
 │   ├── worker/                 # Shell / K8s / HTTP / Benchmark 执行器
+│   ├── gateway/                # AI 推理网关 (Model Router + 限流 + 健康探针)
 │   ├── benchmark/              # Go 并发压测核心 (client, metrics, reporter)
 │   ├── api/                    # HTTP Router
 │   └── telemetry/              # Prometheus Metrics + Trace Timeline
