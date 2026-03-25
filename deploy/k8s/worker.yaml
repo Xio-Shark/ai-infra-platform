@@ -2,6 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ai-job-worker
+  labels:
+    app: ai-job-worker
+    component: worker
 spec:
   replicas: 1
   selector:
@@ -11,8 +14,79 @@ spec:
     metadata:
       labels:
         app: ai-job-worker
+        component: worker
     spec:
+      # GPU node affinity — schedule only on nodes with GPU
+      nodeSelector:
+        accelerator: nvidia-gpu
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
       containers:
         - name: worker
           image: ai-job-orchestrator:latest
-          command: ["./bin/worker", "examples/training_job.json"]
+          command: ["./bin/worker"]
+          env:
+            - name: STORE_BACKEND
+              value: "mysql"
+            - name: MYSQL_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-credentials
+                  key: dsn
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: "all"
+            - name: NVIDIA_DRIVER_CAPABILITIES
+              value: "compute,utility"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+              nvidia.com/gpu: "1"
+            limits:
+              cpu: "4"
+              memory: "8Gi"
+              nvidia.com/gpu: "1"
+          volumeMounts:
+            - name: shared-memory
+              mountPath: /dev/shm
+      volumes:
+        - name: shared-memory
+          emptyDir:
+            medium: Memory
+            sizeLimit: "2Gi"
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ai-job-worker
+  annotations:
+    # GPU utilization via DCGM exporter + custom metrics adapter
+    metric-config.external.gpu-utilization.prometheus/query: |
+      avg(DCGM_FI_DEV_GPU_UTIL{pod=~"ai-job-worker.*"})
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ai-job-worker
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+    # GPU utilization as external metric (requires prometheus-adapter)
+    - type: External
+      external:
+        metric:
+          name: gpu_utilization
+          selector:
+            matchLabels:
+              app: ai-job-worker
+        target:
+          type: AverageValue
+          averageValue: "70"
