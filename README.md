@@ -169,6 +169,23 @@ benchmark executor 从 Job 的 `metadata` 字段读取压测配置（target、co
 | tokens/s | 输出 token 数 / 有效时间 |
 | success_rate | 成功比例 |
 
+## 关联项目
+
+本平台是 AI 推理基础设施层，上层有 Agent 工作流编排引擎通过 HTTP API 调用本平台的推理网关和 GPU 调度能力：
+
+```text
+Agent Execution Engine  ← Agent 工作流编排层（DAG 调度 + Docker 沙箱 + MCP 工具）
+        ↓ HTTP 调用
+AI Infra Platform       ← 本项目（推理网关 + GPU 调度 + 并发压测）
+        ↓ 调用
+推理引擎                ← vLLM / SGLang + CUDA 算子
+```
+
+| 项目 | 职责 | 仓库 |
+|------|------|------|
+| **Agent Exec Engine** | 多步 Agent 工作流编排、DAG 调度、安全沙箱、MCP 工具 | [Xio-Shark/Agent-Exec-Engine](https://github.com/Xio-Shark/Agent-Exec-Engine) |
+| **AI Infra Platform** | GPU 资源感知调度、推理网关、并发压测引擎 | [Xio-Shark/ai-infra-platform](https://github.com/Xio-Shark/ai-infra-platform) |
+
 ## 文档导航
 
 - [系统设计](docs/system_design.md)
@@ -180,3 +197,4 @@ benchmark executor 从 Job 的 `metadata` 字段读取压测配置（target、co
 - [异常场景样例](docs/异常场景样例.md)
 - [工程证据索引](docs/工程证据索引.md)
 - [排障](docs/troubleshooting.md)
+
