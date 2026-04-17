@@ -23,7 +23,7 @@ spec:
       containers:
         - name: gateway
           image: ai-job-orchestrator:latest
-          command: ["./bin/gateway"]
+          command: ["/bin/gateway"]
           ports:
             - containerPort: 9090
               name: http

@@ -16,6 +16,22 @@ services:
       timeout: 3s
       retries: 3
 
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["/bin/gateway"]
+    ports:
+      - "8081:9090"
+    environment:
+      - GATEWAY_LISTEN=:9090
+      - GATEWAY_BACKENDS_JSON=${GATEWAY_BACKENDS_JSON:-[]}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/gateway/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
   prometheus:
     image: prom/prometheus:v2.51.0
     ports:
