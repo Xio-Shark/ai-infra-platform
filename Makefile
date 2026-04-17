@@ -1,4 +1,4 @@
-.PHONY: fmt test run smoke build-benchctl
+.PHONY: fmt test run run-gateway run-notifier smoke build-benchctl build-gateway build-notifier
 
 GOCACHE_DIR := $(CURDIR)/.tmp/go-cache
 GOMODCACHE_DIR := $(CURDIR)/.tmp/go-mod-cache
@@ -16,9 +16,25 @@ run:
 	@mkdir -p $(GOCACHE_DIR) $(GOMODCACHE_DIR)
 	@$(GO_ENV) go run ./cmd/api-server
 
+run-gateway:
+	@mkdir -p $(GOCACHE_DIR) $(GOMODCACHE_DIR)
+	@$(GO_ENV) go run ./cmd/gateway
+
+run-notifier:
+	@mkdir -p $(GOCACHE_DIR) $(GOMODCACHE_DIR)
+	@$(GO_ENV) go run ./cmd/notifier
+
 build-benchctl:
 	@mkdir -p $(GOCACHE_DIR) $(GOMODCACHE_DIR) bin
 	@$(GO_ENV) go build -o bin/benchctl ./cmd/benchctl
+
+build-gateway:
+	@mkdir -p $(GOCACHE_DIR) $(GOMODCACHE_DIR) bin
+	@$(GO_ENV) go build -o bin/gateway ./cmd/gateway
+
+build-notifier:
+	@mkdir -p $(GOCACHE_DIR) $(GOMODCACHE_DIR) bin
+	@$(GO_ENV) go build -o bin/notifier ./cmd/notifier
 
 smoke:
 	@bash ./scripts/smoke_test.sh

@@ -4,7 +4,7 @@
 ![Go](https://img.shields.io/badge/Go-1.22-00ADD8?logo=go)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-面向 AI 训练、推理和压测任务的作业编排平台，内置 Go 并发压测客户端。
+面向 AI 训练、推理和压测任务的作业编排平台，内置 Go 并发压测客户端，并提供可独立启动的推理网关进程。
 
 **GPU 实测亮点**：RTX 4050 Laptop GPU vs Apple Silicon CPU，同模型（Qwen2.5-1.5B）下 **QPS +119%、P50 延迟 -56%、tokens/s +65%**。详见 [benchmark_comparison.md](reports/benchmark_comparison.md)。
 
@@ -39,9 +39,10 @@
 └──────────────┴──────────────────┴────────────────────┘
 
 ┌──────────────────────────────────────────────────────┐
-│                   benchctl CLI                        │
-│  独立运行的 Go 压测工具，直接对接推理服务              │
-│  go run ./cmd/benchctl --target http://... --concurrency 10│
+│              gateway / notifier / benchctl          │
+│  gateway: 独立推理网关进程（HTTP reverse proxy）      │
+│  notifier: Standalone 边界进程（当前为 contract stub） │
+│  benchctl: 独立运行的 Go 压测 CLI                     │
 └──────────────────────────────────────────────────────┘
 ```
 
@@ -52,6 +53,15 @@
 ```bash
 make test        # 运行全部测试
 make run         # 启动 api-server (:8080)
+```
+
+### 启动 gateway
+
+```bash
+export GATEWAY_BACKENDS_JSON='[
+  {"id":"local-vllm","name":"local-vllm","endpoint":"http://127.0.0.1:8000","models":["qwen2.5:1.5b"],"weight":1}
+]'
+make run-gateway   # 启动 gateway (:9090)
 ```
 
 ### 提交 benchmark job
@@ -97,8 +107,10 @@ make build-benchctl
 .
 ├── cmd/
 │   ├── api-server/main.go      # HTTP API 主入口
-│   ├── scheduler/main.go       # 调度器演示
-│   ├── worker/main.go          # Worker 演示
+│   ├── gateway/main.go         # 推理网关独立入口
+│   ├── notifier/main.go        # 通知边界进程（contract stub）
+│   ├── scheduler/main.go       # 调度器示例 runner
+│   ├── worker/main.go          # Worker 示例 runner
 │   └── benchctl/main.go        # Go 压测 CLI
 ├── internal/
 │   ├── model/                  # 领域模型 (Job, Execution, Node, ResourceSpec)
@@ -126,6 +138,13 @@ make build-benchctl
 - **执行**：`os/exec`（Shell）/ K8s manifest 构建 / `net/http`（HTTP）/ 内置 benchmark 引擎
 - **观测**：自实现 Prometheus exporter + 内存 trace 时间线
 - **依赖**：仅 `go-sql-driver/mysql`（标准库之外唯一依赖）
+
+## 进程边界说明
+
+- `api-server`：当前主服务入口，负责任务 API、调度触发、执行回查与指标暴露。
+- `gateway`：独立 HTTP 进程，负责模型路由、限流、健康检查和 SSE 透传。
+- `notifier`：独立边界进程，当前提供 contract/health 接口，用于明确后续通知链路边界。
+- `scheduler`、`worker`：当前保留为示例 runner，不属于默认本地 compose 栈；若用于独立部署，需要继续补齐常驻进程语义与配置。
 
 ## 关键设计
 
@@ -197,4 +216,11 @@ AI Infra Platform       ← 本项目（推理网关 + GPU 调度 + 并发压测
 - [异常场景样例](docs/异常场景样例.md)
 - [工程证据索引](docs/工程证据索引.md)
 - [排障](docs/troubleshooting.md)
+
+## 部署现状
+
+- Docker 镜像当前内置 `/bin/api-server`、`/bin/gateway`、`/bin/notifier`。
+- `deploy/docker-compose.yml` 默认提供 `api-server + gateway + Prometheus + Grafana` 的本地联调入口。
+- `deploy/k8s/gateway.yaml` 已与镜像内的 `/bin/gateway` 对齐。
+- `deploy/k8s/scheduler.yaml`、`deploy/k8s/worker.yaml` 仍属于示例清单，使用前需要结合实际常驻进程语义继续完善。
 
