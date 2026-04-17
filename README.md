@@ -74,6 +74,16 @@ make build-benchctl
   --max-tokens 64
 ```
 
+### 启动 AI 推理网关
+
+```bash
+make build-gateway
+GATEWAY_BACKENDS_JSON='[{"id":"vllm","name":"vllm","endpoint":"http://127.0.0.1:8000","models":["qwen2.5-1.5b"],"weight":1}]' \
+./bin/gateway
+```
+
+可选：通过 `GATEWAY_RATE_LIMITS_JSON='{"qwen2.5-1.5b":200}'` 覆盖 per-model 限流；K8s 部署使用 [`deploy/k8s/gateway.yaml`](deploy/k8s/gateway.yaml) 中的 `./bin/gateway` 命令。
+
 ## API
 
 | Method | Path | 说明 |
@@ -97,8 +107,10 @@ make build-benchctl
 .
 ├── cmd/
 │   ├── api-server/main.go      # HTTP API 主入口
+│   ├── gateway/main.go         # AI 推理网关进程入口
 │   ├── scheduler/main.go       # 调度器演示
 │   ├── worker/main.go          # Worker 演示
+│   ├── notifier/main.go        # 通知边界进程
 │   └── benchctl/main.go        # Go 压测 CLI
 ├── internal/
 │   ├── model/                  # 领域模型 (Job, Execution, Node, ResourceSpec)
@@ -107,6 +119,7 @@ make build-benchctl
 │   ├── scheduler/              # GPU 资源感知 Dispatcher + Best-Fit Matcher + PriorityQueue
 │   ├── worker/                 # Shell / K8s / HTTP / Benchmark 执行器
 │   ├── gateway/                # AI 推理网关 (Model Router + 限流 + 健康探针)
+│   ├── otelgateway/            # 可观测数据接入网关 (Pipeline / WAL / Fanout)
 │   ├── benchmark/              # Go 并发压测核心 (client, metrics, reporter)
 │   ├── api/                    # HTTP Router
 │   └── telemetry/              # Prometheus Metrics + Trace Timeline
